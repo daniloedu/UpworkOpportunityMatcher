@@ -1,0 +1,5 @@
+# Code owners for the repository
+# Ensures required reviews can be satisfied only by @daniloedu when
+# "Require review from Code Owners" is enabled in branch protection.
+* @daniloedu
+
