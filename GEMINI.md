@@ -2,7 +2,7 @@
 
 ## 1. Project Overview
 
-This is a full-stack web application designed to help Upwork freelancers find relevant job opportunities. The tool fetches job postings from the Upwork API, allows users to manage their professional profile (combining data from Upwork and local additions), and provides a dashboard to view and filter job listings. A core planned feature is to use AI to analyze and rank jobs against the user's profile.
+This is a full-stack web application designed to help Upwork freelancers find relevant job opportunities. The tool fetches job postings from the Upwork API, allows users to manage your professional profile (combining data from Upwork and local additions), and provides a dashboard to view and filter job listings. A core planned feature is to use AI to analyze and rank jobs against the user's profile.
 
 **Architecture:**
 
@@ -119,3 +119,60 @@ The backend uses the `google-generativeai` Python library to interact with the G
         analysis_json = json.loads(response.text)
         return analysis_json
     ```
+
+## 6. GitHub Configuration
+
+Upwork AI Job Matcher — GitHub Configuration (local reference)
+
+Date: ${DATE}
+
+Summary
+- Branch created: development (do not merge to main).
+- Remote set: origin → https://github.com/daniloedu/Upwork_AI_Job_Matcher.git
+- Snapshot commit on development: "chore(repo): snapshot stable state and clean ignored artifacts".
+- CODEOWNERS added to require owner review: .github/CODEOWNERS → "* @daniloedu" (committed on development).
+
+Branch Protection (intended)
+- main:
+  - Require PR before merging.
+  - Require at least 1 approving review.
+  - Require review from Code Owners (enforces @daniloedu approval).
+  - Enforce for admins.
+  - Restrict who can push: only @daniloedu.
+- development:
+  - Enforce for admins.
+  - Require Code Owner review when PRs are.
+  - Optionally allow direct pushes by @daniloedu.
+
+Draft PR (optional)
+- Create a draft PR from development → main for later review.
+- Link to start: https://github.com/daniloedu/Upwork_AI_Job_Matcher/pull/new/development
+
+CLI commands (gh)
+1) Protect main
+   gh api -X PUT repos/daniloedu/Upwork_AI_Job_Matcher/branches/main/protection \
+     -f required_status_checks.strict=true \
+     -f enforce_admins=true \
+     -f required_pull_request_reviews.required_approving_review_count=1 \
+     -f required_pull_request_reviews.require_code_owner_reviews=true \
+     -F restrictions=users='["daniloedu"]' \
+     -H "Accept: application/vnd.github+json"
+
+2) Protect development
+   gh api -X PUT repos/daniloedu/Upwork_AI_Job_Matcher/branches/development/protection \
+     -f required_status_checks.strict=false \
+     -f enforce_admins=true \
+     -f required_pull_request_reviews.required_approving_review_count=1 \
+     -f required_pull_request_reviews.require_code_owner_reviews=true \
+     -F restrictions=users='["daniloedu"]' \
+     -H "Accept: application/vnd.github+json"
+
+3) Create draft PR
+   gh pr create --base main --head development \
+     --title "Stabilize: development → main" \
+     --body "Draft PR to prepare main release. Review required by @daniloedu."
+     --draft
+
+Notes
+- .github/CODEOWNERS ensures only @daniloedu can satisfy required review when "Require review from Code Owners" is enabled.
+- .env, venv, node_modules, and compiled artifacts are ignored via .gitignore.
