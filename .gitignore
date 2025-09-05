@@ -38,3 +38,5 @@ logs/
 
 # Other
 user_profile.json.encrypted
+\# Local GitHub configuration reference (not tracked)
+docs/github-configuration.txt
