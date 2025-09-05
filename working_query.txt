@@ -1,0 +1,30 @@
+#Last Working Code
+query getFreelancerProfile($profileKey: String!) {
+  freelancerProfileByProfileKey(profileKey: $profileKey) {
+    personalData {
+      title
+      description
+    }
+    employmentRecords {
+      companyName
+      description
+      role
+      startDate
+      endDate
+    }
+    skills {
+      edges {
+        node {
+          id
+        }
+      }
+    }
+    certificates {
+      notes
+    }
+    educationRecords {
+      degree
+      areaOfStudy
+    }
+  }
+}

@@ -1,0 +1,31 @@
+### Session Summary: 2025-09-02
+
+**Goal:** Implement the "Analyze with AI" feature for job opportunities using the Google Gemini API.
+
+**Key Accomplishments:**
+
+1.  **Backend Foundation:**
+    *   Added the `google-generativeai` dependency to `requirements.txt` and resolved installation issues.
+    *   Created `backend/prompts.py` to house a detailed prompt template for the AI analysis.
+    *   Created `backend/gemini_api.py` to encapsulate all logic for interacting with the Gemini API.
+    *   Added a new `POST /jobs/analyze` endpoint to `backend/main.py` to orchestrate the analysis.
+
+2.  **Frontend Integration:**
+    *   Added an `analyzeJob` function to the frontend's API library (`src/lib/api.ts`).
+    *   Replaced the mock-data `AIAnalysis.tsx` component with a fully functional version that calls the backend and displays loading, error, and success states.
+
+**Unresolved Issue & Debugging Journey:**
+
+The primary challenge of the session was a persistent error when calling the Gemini API from the backend.
+
+*   We encountered and fixed several consecutive errors:
+    1.  An `IndentationError` in `main.py`.
+    2.  A `ValueError` from a mismatched API key name in the `.env` file.
+    3.  A `KeyError` from incorrect string formatting in the prompt.
+    4.  An `asyncio.CancelledError` suggesting a request timeout, which we addressed by adding an explicit timeout.
+*   To isolate the problem, we created a `test.py` script, which confirmed the issue was within the `gemini_api.py` module itself.
+*   The final error we faced was an `AttributeError`, indicating an incorrect usage of the Google AI library, even after attempting to align the code with user-provided examples.
+
+**Next Steps:**
+
+*   The immediate priority for the next session is to resolve the `AttributeError` in the `test.py` script to achieve a successful, isolated API call to the Gemini service.
