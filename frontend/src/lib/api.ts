@@ -8,10 +8,18 @@ const apiClient = axios.create({
 
 // --- TypeScript Interfaces ---
 
+export interface ApiConfig {
+  provider: 'google' | 'aws';
+  google_api_key?: string;
+  aws_access_key_id?: string;
+  aws_secret_access_key?: string;
+  aws_region?: string;
+}
+
 export interface JobSearchPayload {
   query?: string | null;
   category_ids?: string[] | null;
-  locations?: string[] | null;
+  location?: string | null;
   first?: number;
   after?: string | null;
 }
@@ -50,6 +58,17 @@ export interface UserProfile {
 export interface AnalysisPayload {
   job: Job;
   profile: UserProfile;
+}
+
+export interface BulkAnalysisPayload {
+  jobs: Job[];
+  profile: UserProfile;
+}
+
+export interface ProposalGenerationPayload {
+  job: Job;
+  profile: UserProfile;
+  analysis: any; 
 }
 
 export interface JobAPIResponse {
@@ -95,6 +114,26 @@ export const getCategories = async () => {
 
 export const analyzeJob = async (payload: AnalysisPayload) => {
   const response = await apiClient.post('/jobs/analyze', payload);
+  return response.data;
+};
+
+export const analyzeAllJobs = async (payload: BulkAnalysisPayload) => {
+  const response = await apiClient.post('/jobs/analyze-all', payload);
+  return response.data;
+};
+
+export const generateProposal = async (payload: ProposalGenerationPayload) => {
+  const response = await apiClient.post('/proposals/generate', payload);
+  return response.data;
+};
+
+export const getApiConfig = async (): Promise<ApiConfig> => {
+  const response = await apiClient.get('/api/config');
+  return response.data;
+};
+
+export const saveApiConfig = async (config: ApiConfig) => {
+  const response = await apiClient.post('/api/config', config);
   return response.data;
 };
 

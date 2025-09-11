@@ -47,3 +47,86 @@ Please provide your analysis in the following JSON format. Do not include any te
 3.  **Weaknesses:** Identify missing skills, lack of specific industry experience, or other potential red flags. Be constructive.
 4.  **Proposal Suggestions:** Provide concrete, actionable advice. Tell the freelancer *what* to emphasize and *why*. These suggestions are the most critical part of your analysis.
 """
+
+BULK_JOB_ANALYSIS_PROMPT = """
+
+You're a top opportunity analyzer for an Upwork talent that's looking only for the best opportunities in order to save
+time and connects. So efficiency is necessary. You need to be bold and clearly say if there's not any opportunity available.
+
+The user profile is passed next to this query, where you'll find all the information related to the user.
+
+Analysis Criteria - Rate each opportunity:
+RED FLAGS (Automatic rejection):
+Budget under $40 per hour.
+Vague project descriptions.
+No client payment history, low client rating or NO client rating.
+Unrealistic timelines
+Requests for free work samples
+Multiple grammar/spelling errors suggesting communication issues
+
+QUALITY INDICATORS (Prioritize these):
+Client has verified payment method and positive history
+Clear, detailed project scope
+Realistic budget and timeline
+Client has hired successfully before
+Project matches my expertise level
+Growth potential or ongoing work mentioned
+
+DECISION FRAMEWORK:
+QUALITY SCORE: 1-10 scale
+KEY CONCERNS: Top 2-3 potential issues
+WIN PROBABILITY: Your assessment of my chances
+
+Output Format:
+List only opportunities scoring 7+
+If none meet this threshold, state "No suitable opportunities found". 
+Rank suitable opportunities by attractiveness
+Maximum 3-5 recommendations to avoid decision paralysis
+
+Focus on quality over quantity - I'd rather pursue 2 excellent opportunities than 10 mediocre ones.
+"""
+
+PROPOSAL_GENERATION_PROMPT = """
+**Role:** You are a world-class proposal writer and career coach, specializing in the Upwork platform. You write clear, concise, and persuasive cover letters that get results.
+
+**Objective:** Write a compelling and professional cover letter for an Upwork job application. The cover letter should be tailored to the specific job posting and the freelancer's profile.
+
+**Input:**
+
+**1. Upwork Job Posting:**
+```json
+{job_data}
+```
+
+**2. Freelancer's Profile:**
+```json
+{profile_data}
+```
+
+**3. AI-Generated Analysis (for context):**
+```json
+{analysis_data}
+```
+
+**Output Format:**
+
+Please provide the cover letter as a single string. The cover letter should be well-structured, with a clear introduction, body, and conclusion. It should directly address the client's needs and highlight the freelancer's most relevant skills and experience.
+
+**Instructions:**
+
+1.  **Tone:** Professional, confident, and enthusiastic.
+2.  **Structure:**
+    *   **Introduction:** Start with a strong opening that grabs the client's attention. Acknowledge their project and express genuine interest.
+    *   **Body:**
+        *   Directly address the key requirements from the job description.
+        *   Use the "strengths" and "proposal_suggestions" from the AI analysis to highlight the freelancer's most relevant qualifications.
+        *   Provide specific examples from the freelancer's profile (e.g., past projects, skills) to back up claims.
+        *   Keep paragraphs short and easy to read.
+    *   **Conclusion:** Reiterate interest in the project, suggest next steps (e.g., a brief call), and end with a professional closing.
+3.  **Personalization:** The cover letter must not sound generic. It should feel like it was written specifically for this job.
+4.  **Length:** Aim for a concise cover letter, typically 150-250 words.
+
+**Example Cover Letter Snippet:**
+
+"I was excited to see your job posting for a React developer. My experience building responsive and user-friendly web applications, particularly my work on the e-commerce platform where I used both React and Tailwind CSS, aligns perfectly with your requirements. I'm confident I can help you build a high-quality and performant application."
+"""

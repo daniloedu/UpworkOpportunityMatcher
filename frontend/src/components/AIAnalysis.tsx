@@ -1,11 +1,12 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Brain, CheckCircle, AlertCircle, Star, Download, FileText } from "lucide-react";
+import { Brain, CheckCircle, AlertCircle, Star, Download, FileText, Loader2 } from "lucide-react";
 import { Button } from "./ui/button";
-import { Job } from "../lib/api";
+import { Job, UserProfile as UserProfileType, generateProposal } from "../lib/api";
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useMutation } from "@tanstack/react-query";
 
 interface AIAnalysisProps {
   job: Job | null;
@@ -14,6 +15,7 @@ interface AIAnalysisProps {
   isError: boolean;
   error: Error | null;
   onClose: () => void;
+  userProfile: UserProfileType | null;
 }
 
 const loadingMessages = [
@@ -53,8 +55,34 @@ const LoadingAnimation = () => {
   );
 };
 
-export const AIAnalysis = ({ job, analysisData, isLoading, isError, error, onClose }: AIAnalysisProps) => {
+export const AIAnalysis = ({ job, analysisData, isLoading, isError, error, onClose, userProfile }: AIAnalysisProps) => {
   const { toast } = useToast();
+  const [generatedProposal, setGeneratedProposal] = useState<string | null>(null);
+
+  const proposalMutation = useMutation({
+    mutationFn: generateProposal,
+    onSuccess: (data) => {
+      setGeneratedProposal(data.proposal_text);
+    },
+    onError: (error) => {
+      toast({
+        title: "Proposal Generation Failed",
+        description: error.message || "Could not generate the proposal.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleGenerateProposal = () => {
+    if (!job || !userProfile || !analysisData) return;
+
+    proposalMutation.mutate({
+        job,
+        profile: userProfile,
+        analysis: analysisData,
+    });
+  };
+
 
   const handleSaveInsights = () => {
     if (!analysisData || !job) return;
@@ -196,31 +224,58 @@ ${analysisData.analysis_summary}\n\n`;
   };
 
   return (
-    <Dialog open={!!job} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center space-x-2 text-xl">
-            <Brain className="h-6 w-6 text-primary" />
-            <span>AI Job Analysis</span>
-          </DialogTitle>
-          <DialogDescription>
-            Analysis of your profile against: <strong>{job?.title || 'Job'}</strong>
-          </DialogDescription>
-        </DialogHeader>
-        {renderContent()}
-        <DialogFooter className="pt-4">
-            <Button variant="secondary" onClick={() => {}} disabled>
-                <FileText className="h-4 w-4 mr-2" />
-                Generate Proposal
-            </Button>
-            <Button variant="outline" onClick={handleSaveInsights} disabled={!analysisData || isLoading}>
-                <Download className="h-4 w-4 mr-2" />
-                Save Insights
-            </Button>
-            <Button variant="outline" onClick={onClose}>Close</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <>
+      <Dialog open={!!job} onOpenChange={(isOpen) => !isOpen && onClose()}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2 text-xl">
+              <Brain className="h-6 w-6 text-primary" />
+              <span>AI Job Analysis</span>
+            </DialogTitle>
+            <DialogDescription>
+              Analysis of your profile against: <strong>{job?.title || 'Job'}</strong>
+            </DialogDescription>
+          </DialogHeader>
+          {renderContent()}
+          <DialogFooter className="pt-4">
+              <Button 
+                  variant="secondary" 
+                  onClick={handleGenerateProposal} 
+                  disabled={!analysisData || isLoading || proposalMutation.isPending}
+              >
+                  {proposalMutation.isPending ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                      <FileText className="h-4 w-4 mr-2" />
+                  )}
+                  Generate Proposal
+              </Button>
+              <Button variant="outline" onClick={handleSaveInsights} disabled={!analysisData || isLoading}>
+                  <Download className="h-4 w-4 mr-2" />
+                  Save Insights
+              </Button>
+              <Button variant="outline" onClick={onClose}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={!!generatedProposal} onOpenChange={(isOpen) => !isOpen && setGeneratedProposal(null)}>
+          <DialogContent className="max-w-3xl">
+              <DialogHeader>
+                  <DialogTitle>Generated Proposal</DialogTitle>
+              </DialogHeader>
+              <div className="prose dark:prose-invert max-h-[60vh] overflow-y-auto p-1">
+                  <p>{generatedProposal}</p>
+              </div>
+              <DialogFooter>
+                  <Button onClick={() => {
+                      navigator.clipboard.writeText(generatedProposal || "");
+                      toast({ title: "Copied to clipboard!" });
+                  }}>Copy</Button>
+                  <Button variant="outline" onClick={() => setGeneratedProposal(null)}>Close</Button>
+              </DialogFooter>
+          </DialogContent>
+      </Dialog>
+    </>
   );
 };
 

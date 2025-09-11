@@ -72,9 +72,14 @@ The frontend development server runs on port `8080`.
 
 ## 4. AI Model Usage
 
-*   **Approved Models:** The following Google AI models are to be used for this project:
+The application supports two AI providers: Google Gemini and AWS Bedrock.
+
+*   **Approved Google Models:**
     *   `gemini-2.5-pro`
     *   `gemini-2.5-flash`
+
+*   **Approved AWS Bedrock Models:**
+    *   `us.amazon.nova-lite-v1:0`
 
 *   **Legacy Models:** Do not use any `gemini-1.5` models. They are to be considered deprecated for this project.
 
@@ -120,7 +125,72 @@ The backend uses the `google-generativeai` Python library to interact with the G
         return analysis_json
     ```
 
-## 6. GitHub Configuration
+## AWS Bedrock Integration
+
+### Overview
+The application now supports AWS Bedrock as an alternative AI provider for job analysis and proposal generation. The integration uses the `boto3` Python library to interact with the Bedrock API. The primary integration point is the `backend/bedrock_api.py` module.
+
+### Configuration
+The user can select "AWS Bedrock" as the AI provider in the "AI Provider Configuration" section of their user profile.
+
+Authentication is handled in two ways:
+1.  **Environment Credentials (Recommended):** If the user's environment is already configured for AWS (e.g., via `aws configure`), the application will automatically use these credentials. The `AWS Access Key ID` and `AWS Secret Access Key` fields in the UI can be left blank.
+2.  **Explicit Credentials:** The user can provide an `AWS Access Key ID` and `AWS Secret Access Key` directly in the UI to override environment credentials.
+
+### Implementation Example (`bedrock_api.py`)
+The following is a summary of the implementation for making an API call:
+
+```python
+# In backend/bedrock_api.py
+import boto3
+
+async def get_job_analysis(job_data: dict, profile_data: dict, api_config: dict) -> dict:
+    # ... (setup and credential handling)
+
+    client_args = {
+        "service_name": "bedrock-runtime",
+        "region_name": api_config.get("aws_region", "us-west-2")
+    }
+
+    # Use credentials from UI if provided, otherwise let boto3 find them
+    if api_config.get("aws_access_key_id") and api_config.get("aws_secret_access_key"):
+        client_args["aws_access_key_id"] = api_config["aws_access_key_id"]
+        client_args["aws_secret_access_key"] = api_config["aws_secret_access_key"]
+
+    client = boto3.client(**client_args)
+
+    model_id = "us.amazon.nova-lite-v1:0"
+    # ... (prompt creation and API call)
+
+    response = client.converse(modelId=model_id, messages=messages)
+    # ... (response parsing)
+```
+
+## 6. Upwork API GraphQL Notes
+
+### Location Filtering
+
+The correct way to filter by location in the `marketplaceJobPostingsSearch` query is to use a `location` object within the `marketPlaceJobFilter`. This filter only supports a single country at a time, using two-letter country codes.
+
+**Example Query Variables:**
+```json
+{
+  "marketPlaceJobFilter": {
+    "location": {
+      "country": "US"
+    }
+  },
+  "searchType": "ALL",
+  "sortAttributes": [
+    {
+      "attribute": "RELEVANT",
+      "order": "DESC"
+    }
+  ]
+}
+```
+
+## 7. GitHub Configuration
 
 Upwork AI Job Matcher — GitHub Configuration (local reference)
 

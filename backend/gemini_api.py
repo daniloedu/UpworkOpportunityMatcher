@@ -59,3 +59,35 @@ async def get_job_analysis(job_data: dict, profile_data: dict) -> dict:
     except Exception as e:
         logger.error(f"An unexpected error occurred during Gemini API call: {e}", exc_info=True)
         raise ConnectionError("An unexpected error occurred while analyzing the job.")
+
+async def generate_proposal(job_data: dict, profile_data: dict, analysis_data: dict) -> str:
+    """
+    Generates a cover letter for a job application using the Gemini API.
+    """
+    logger.info(f"Starting proposal generation for job: {job_data.get('title')}")
+
+    try:
+        prompt_text = prompts.PROPOSAL_GENERATION_PROMPT.format(
+            job_data=json.dumps(job_data, indent=2),
+            profile_data=json.dumps(profile_data, indent=2),
+            analysis_data=json.dumps(analysis_data, indent=2)
+        )
+
+        model = genai.GenerativeModel('gemini-2.5-flash')
+
+        response = await model.generate_content_async(
+            prompt_text,
+            request_options={'timeout': 180}
+        )
+
+        proposal_text = response.text
+        logger.info(f"Successfully generated proposal for job: {job_data.get('title')}")
+        
+        return proposal_text
+
+    except (google_exceptions.GoogleAPICallError, google_exceptions.RetryError) as e:
+        logger.error(f"Google API call failed during proposal generation: {e}", exc_info=True)
+        raise ConnectionError(f"Communication error with Google AI during proposal generation: {e}")
+    except Exception as e:
+        logger.error(f"An unexpected error occurred during proposal generation: {e}", exc_info=True)
+        raise ConnectionError("An unexpected error occurred while generating the proposal.")

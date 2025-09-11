@@ -40,3 +40,8 @@ logs/
 user_profile.json.encrypted
 \# Local GitHub configuration reference (not tracked)
 docs/github-configuration.txt
+
+# Ignore documentation and script folders
+UpworkMDs/
+Tests_Scripts/
+Sessions_notes/

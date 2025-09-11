@@ -179,7 +179,7 @@ async def fetch_upwork_categories():
 async def search_upwork_jobs_gql(
     query: str = None,
     category_ids: list = None,
-    locations: Optional[List[str]] = None, # Accept locations argument
+    location: Optional[str] = None, # Accept single location argument
     first: int = 50, # Request 50 by default
     after: Optional[str] = None,
     **kwargs
@@ -248,22 +248,27 @@ async def search_upwork_jobs_gql(
     # --- CORRECTED Logic ---
     # Always build the market_place_filter dictionary
     market_place_filter = {}
+    
+    COUNTRY_CODE_TO_NAME = {
+    "US": "United States",
+    "GB": "United Kingdom",
+    "CA": "Canada",
+    "AU": "Australia",
+    }
+
 
     # Add specific filters if provided
-    has_specific_filter = bool(query or category_ids or locations)
-    # --- End include 'locations' ---
-    has_specific_filter = False
+    has_specific_filter = bool(query or category_ids or location)
     if query:
         market_place_filter["searchExpression_eq"] = query
-        has_specific_filter = True
+
     if category_ids:
         market_place_filter["categoryIds_any"] = [str(cat_id) for cat_id in category_ids]
-        has_specific_filter = True
-    if locations:
-        # Replace "locations_any" with the correct field from Upwork docs if different!
-        market_place_filter["locations_any"] = locations
-        has_specific_filter = True
-        logger.info(f"Applying locations filter: {locations}")
+
+    if location:
+        country_name = COUNTRY_CODE_TO_NAME.get(location, location)
+        market_place_filter["locations_any"] = [country_name]
+        logger.info(f"Applying location filter: {country_name} (from code: {location})")
 
 
     # ALWAYS add pagination_eq, and ALWAYS include 'after', defaulting to "0"

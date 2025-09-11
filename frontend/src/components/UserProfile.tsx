@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { X, Edit, Save, Loader2, Briefcase, GraduationCap, Star, BookUser } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { ApiConfigForm } from './ApiConfigForm';
 
 interface UserProfileProps {
   onClose: () => void;
@@ -357,6 +358,9 @@ const UserProfile = ({ onClose }: UserProfileProps) => {
               )}
             </CardContent>
           </Card>
+
+          {/* --- API Configuration --- */}
+          <ApiConfigForm />
 
         </div>
       </>

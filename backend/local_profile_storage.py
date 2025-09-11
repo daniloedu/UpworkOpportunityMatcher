@@ -16,7 +16,14 @@ def get_default_profile():
         "additional_details": "",
         "local_skills": [],
         "local_certificates": [],
-        "local_education": []
+        "local_education": [],
+        "api_config": {
+            "provider": "google",
+            "google_api_key": "",
+            "aws_access_key_id": "",
+            "aws_secret_access_key": "",
+            "aws_region": "us-west-2"
+        }
     }
 
 def read_local_profile() -> dict:

@@ -10,7 +10,7 @@ from pydantic import BaseModel
 from typing import Optional, List
 
 from fastapi.middleware.cors import CORSMiddleware
-from . import upwork_api, local_profile_storage, gemini_api
+from . import upwork_api, local_profile_storage, gemini_api, bulk_analyzer, bedrock_api
 
 # --- Configuration & Setup ---
 DOTENV_PATH = os.path.join(os.path.dirname(__file__), '..', '.env')
@@ -32,9 +32,17 @@ UPWORK_OAUTH_BASE_URL = "https://www.upwork.com/ab/account-security/oauth2/autho
 UPWORK_TOKEN_ENDPOINT = "https://www.upwork.com/api/v3/oauth2/token"
 
 # --- Pydantic Models ---
+class ApiConfig(BaseModel):
+    provider: str
+    google_api_key: Optional[str] = None
+    aws_access_key_id: Optional[str] = None
+    aws_secret_access_key: Optional[str] = None
+    aws_region: Optional[str] = "us-west-2"
+
 class JobSearchRequest(BaseModel):
     query: Optional[str] = None
     category_ids: Optional[List[str]] = None
+    location: Optional[str] = None
     first: int = 50
     after: Optional[str] = None
 
@@ -72,6 +80,15 @@ class Job(BaseModel):
 class AnalysisRequest(BaseModel):
     job: Job
     profile: dict
+
+class BulkAnalysisRequest(BaseModel):
+    jobs: List[Job]
+    profile: dict
+
+class ProposalGenerationRequest(BaseModel):
+    job: Job
+    profile: dict
+    analysis: dict
 
 # --- FastAPI App ---
 app = FastAPI(title="Upwork Opportunity Matcher Backend")
@@ -149,23 +166,95 @@ async def get_auth_status():
     return {"authenticated": True}
 
 # --- API Endpoints ---
+@app.post("/jobs/analyze-all", tags=["Analysis"])
+async def analyze_all_jobs(request: BulkAnalysisRequest):
+    logger.info(f"Received request to analyze {len(request.jobs)} jobs.")
+    try:
+        local_profile = local_profile_storage.read_local_profile()
+        api_config = local_profile.get("api_config", {"provider": "google"})
+
+        analysis_results = await bulk_analyzer.analyze_multiple_jobs(
+            jobs=[job.dict() for job in request.jobs],
+            profile_data=request.profile,
+            api_config=api_config
+        )
+        return JSONResponse(content=analysis_results)
+    except Exception as e:
+        logger.error(f"An unexpected error occurred during bulk analysis: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="An unexpected server error occurred during bulk analysis.")
+
 @app.post("/jobs/analyze", tags=["Analysis"])
 async def analyze_job(request: AnalysisRequest):
     logger.info(f"Received request to analyze job: {request.job.title}")
     try:
-        analysis_result = await gemini_api.get_job_analysis(
-            job_data=request.job.dict(),
-            profile_data=request.profile
-        )
+        # Read the full local profile to get the API config
+        local_profile = local_profile_storage.read_local_profile()
+        # Get the api_config, or use a default if it doesn't exist.
+        api_config = local_profile.get("api_config", {"provider": "google"})
+
+        if not api_config or "provider" not in api_config:
+            # This case should ideally not be reached due to the default above, but as a safeguard:
+            api_config = {"provider": "google"}
+
+        provider = api_config.get("provider", "google")
+        logger.info(f"Using AI provider: {provider}")
+
+        if provider == "google":
+            analysis_result = await gemini_api.get_job_analysis(
+                job_data=request.job.dict(),
+                profile_data=request.profile
+            )
+        elif provider == "aws":
+            analysis_result = await bedrock_api.get_job_analysis(
+                job_data=request.job.dict(),
+                profile_data=request.profile,
+                api_config=api_config
+            )
+        else:
+            raise HTTPException(status_code=400, detail=f"Unsupported AI provider: {provider}")
+
         return JSONResponse(content=analysis_result)
     except (ValueError, ConnectionError) as e:
-        logger.error(f"Error during job analysis for '{job.title}': {e}", exc_info=True)
-        # Use a 424 Failed Dependency status code for AI service failures
+        logger.error(f"Error during job analysis for '{request.job.title}': {e}", exc_info=True)
         raise HTTPException(status_code=424, detail=str(e))
     except HTTPException as e:
-        raise e # Re-raise other HTTPExceptions to keep their original status code
+        raise e
     except Exception as e:
-        logger.error(f"An unexpected error occurred during analysis for '{job.title}': {e}", exc_info=True)
+        logger.error(f"An unexpected error occurred during analysis for '{request.job.title}': {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="An unexpected server error occurred.")
+
+
+@app.post("/proposals/generate", tags=["Proposals"])
+async def generate_proposal_endpoint(request: ProposalGenerationRequest):
+    logger.info(f"Received request to generate proposal for job: {request.job.title}")
+    try:
+        local_profile = local_profile_storage.read_local_profile()
+        api_config = local_profile.get("api_config", {"provider": "google"})
+        provider = api_config.get("provider", "google")
+        logger.info(f"Using AI provider: {provider} for proposal generation")
+
+        if provider == "google":
+            proposal_text = await gemini_api.generate_proposal(
+                job_data=request.job.dict(),
+                profile_data=request.profile,
+                analysis_data=request.analysis
+            )
+        elif provider == "aws":
+            proposal_text = await bedrock_api.generate_proposal(
+                job_data=request.job.dict(),
+                profile_data=request.profile,
+                analysis_data=request.analysis,
+                api_config=api_config
+            )
+        else:
+            raise HTTPException(status_code=400, detail=f"Unsupported AI provider: {provider}")
+
+        return JSONResponse(content={"proposal_text": proposal_text})
+    except (ValueError, ConnectionError) as e:
+        logger.error(f"Error during proposal generation for '{request.job.title}': {e}", exc_info=True)
+        raise HTTPException(status_code=424, detail=str(e))
+    except Exception as e:
+        logger.error(f"An unexpected error occurred during proposal generation for '{request.job.title}': {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="An unexpected server error occurred.")
 
 @app.get("/filters/categories", tags=["Filters"])
@@ -183,6 +272,7 @@ async def fetch_jobs(search_request: JobSearchRequest):
         jobs_data = await upwork_api.search_upwork_jobs_gql(
             query=search_request.query,
             category_ids=search_request.category_ids,
+            location=search_request.location,
             first=search_request.first,
             after=search_request.after
         )
@@ -217,11 +307,48 @@ async def get_local_profile():
 @app.post("/local-profile", tags=["Profile"])
 async def update_local_profile(profile_data: LocalProfileData):
     try:
-        local_profile_storage.write_local_profile(profile_data.dict())
+        # Read the existing profile to preserve the api_config
+        existing_profile = local_profile_storage.read_local_profile()
+        api_config = existing_profile.get("api_config", local_profile_storage.get_default_profile()["api_config"])
+
+        # Create the new profile data, combining the updated fields with the existing api_config
+        new_profile_data = profile_data.dict()
+        new_profile_data["api_config"] = api_config
+
+        local_profile_storage.write_local_profile(new_profile_data)
         return {"status": "success", "message": "Local profile updated successfully."}
     except Exception as e:
         logger.error(f"Error writing local profile: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Could not write local profile data.")
+
+# --- Config Endpoints ---
+@app.get("/api/config", tags=["Configuration"])
+async def get_api_config():
+    try:
+        profile_data = local_profile_storage.read_local_profile()
+        api_config = profile_data.get("api_config", local_profile_storage.get_default_profile()["api_config"])
+        return JSONResponse(content=api_config)
+    except Exception as e:
+        logger.error(f"Error reading API config: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Could not read API config.")
+
+@app.post("/api/config", tags=["Configuration"])
+async def update_api_config(api_config: ApiConfig):
+    try:
+        # Read the existing profile
+        existing_profile = local_profile_storage.read_local_profile()
+        
+        # Update the api_config part of the profile
+        existing_profile["api_config"] = api_config.dict()
+        
+        # Write the entire profile back
+        local_profile_storage.write_local_profile(existing_profile)
+        
+        return {"status": "success", "message": "API configuration updated successfully."}
+    except Exception as e:
+        logger.error(f"Error writing API config: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Could not write API config.")
+
 
 # --- Health Check ---
 @app.get("/healthz", tags=["System"])

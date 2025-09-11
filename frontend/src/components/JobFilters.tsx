@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
-import { ChevronDown, ChevronUp, MapPin, Tag, DollarSign } from "lucide-react";
+import { useState } from "react";
+import { ChevronDown, ChevronUp, MapPin, Tag, DollarSign, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
@@ -14,7 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 interface Filter {
   keywords: string;
   categories: string[];
-  locations: string[];
+  location: string;
   minBudget: string;
   maxBudget: string;
 }
@@ -34,7 +35,7 @@ export const JobFilters = ({ onApplyFilters, isFetching }: JobFiltersProps) => {
 
   const [keywords, setKeywords] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
+  const [selectedLocation, setSelectedLocation] = useState<string>("");
 
   const { data: categories, isLoading: isLoadingCategories } = useQuery<any[]>({
     queryKey: ['categories'],
@@ -58,18 +59,14 @@ export const JobFilters = ({ onApplyFilters, isFetching }: JobFiltersProps) => {
   };
 
   const handleLocationChange = (locationId: string) => {
-    setSelectedLocations(prev =>
-      prev.includes(locationId)
-        ? prev.filter(id => id !== locationId)
-        : [...prev, locationId]
-    );
+    setSelectedLocation(locationId);
   };
 
   const handleApplyFilters = () => {
     onApplyFilters({
       keywords,
       categories: selectedCategories,
-      locations: selectedLocations,
+      location: selectedLocation,
       minBudget: "", // Placeholder for min budget
       maxBudget: "", // Placeholder for max budget
     });
@@ -78,23 +75,22 @@ export const JobFilters = ({ onApplyFilters, isFetching }: JobFiltersProps) => {
   const handleClearFilters = () => {
     setKeywords("");
     setSelectedCategories([]);
-    setSelectedLocations([]);
+    setSelectedLocation("");
     // Also clear other filters when they are implemented
     onApplyFilters({
       keywords: "",
       categories: [],
-      locations: [],
+      location: "",
       minBudget: "",
       maxBudget: "",
     });
   };
 
   const locations = [
-    { id: "usa", label: "USA" },
-    { id: "uk", label: "United Kingdom" },
-    { id: "canada", label: "Canada" },
-    { id: "australia", label: "Australia" },
-    { id: "remote", label: "Remote Worldwide" },
+    { id: "US", label: "United States" },
+    { id: "GB", label: "United Kingdom" },
+    { id: "CA", label: "Canada" },
+    { id: "AU", label: "Australia" },
   ];
 
   return (
@@ -107,17 +103,27 @@ export const JobFilters = ({ onApplyFilters, isFetching }: JobFiltersProps) => {
       </CardHeader>
       <CardContent className="space-y-6 flex-1 overflow-y-auto">
         {/* Keywords */}
-        <div>
+        <div className="relative">
           <Label htmlFor="keywords" className="text-sm font-medium text-foreground">
             Keywords
           </Label>
           <Input
             id="keywords"
             placeholder="e.g. project management"
-            className="mt-2"
+            className="mt-2 pr-8"
             value={keywords}
             onChange={(e) => setKeywords(e.target.value)}
           />
+          {keywords && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-1 top-7 h-6 w-6"
+              onClick={() => setKeywords("")}
+            >
+              <X className="h-4 w-4 text-muted-foreground" />
+            </Button>
+          )}
         </div>
 
         <Separator />
@@ -169,7 +175,7 @@ export const JobFilters = ({ onApplyFilters, isFetching }: JobFiltersProps) => {
 
         <Separator />
 
-        {/* Client Locations */}
+        {/* Client Location */}
         <div>
           <Button
             variant="ghost"
@@ -178,7 +184,7 @@ export const JobFilters = ({ onApplyFilters, isFetching }: JobFiltersProps) => {
           >
             <span className="flex items-center space-x-2">
               <MapPin className="h-4 w-4" />
-              <span>Client Locations</span>
+              <span>Client Location</span>
             </span>
             {expandedSections.locations ? (
               <ChevronUp className="h-4 w-4" />
@@ -188,14 +194,14 @@ export const JobFilters = ({ onApplyFilters, isFetching }: JobFiltersProps) => {
           </Button>
 
           {expandedSections.locations && (
-            <div className="mt-3 space-y-2">
+            <RadioGroup
+              value={selectedLocation}
+              onValueChange={handleLocationChange}
+              className="mt-3 space-y-2"
+            >
               {locations.map((location) => (
                 <div key={location.id} className="flex items-center space-x-2">
-                  <Checkbox 
-                    id={location.id} 
-                    checked={selectedLocations.includes(location.label)}
-                    onCheckedChange={() => handleLocationChange(location.label)}
-                  />
+                  <RadioGroupItem value={location.id} id={location.id} />
                   <Label
                     htmlFor={location.id}
                     className="flex-1 text-sm cursor-pointer hover:text-primary transition-smooth"
@@ -204,7 +210,7 @@ export const JobFilters = ({ onApplyFilters, isFetching }: JobFiltersProps) => {
                   </Label>
                 </div>
               ))}
-            </div>
+            </RadioGroup>
           )}
         </div>
 

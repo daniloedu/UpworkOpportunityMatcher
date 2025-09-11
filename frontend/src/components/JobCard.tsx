@@ -103,7 +103,7 @@ export const JobCard: React.FC<JobCardProps> = ({ job, onAnalyze, isAnalyzing, i
             <Button
               onClick={onAnalyze}
               disabled={isAnalyzing || isProfileLoading}
-              className="bg-gradient-primary hover:opacity-90 shadow-soft flex items-center justify-center space-x-2 w-full sm:w-auto"
+              className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground hover:opacity-90 shadow-md flex items-center justify-center space-x-2 w-full sm:w-auto transition-all duration-300 ease-in-out transform hover:scale-105"
               size="sm"
             >
               {isAnalyzing ? (
@@ -111,7 +111,7 @@ export const JobCard: React.FC<JobCardProps> = ({ job, onAnalyze, isAnalyzing, i
               ) : (
                 <Zap className="h-4 w-4" />
               )}
-              <span className="text-sm">{isAnalyzing ? 'Analyzing...' : 'AI Analyze'}</span>
+              <span className="text-sm font-semibold">{isAnalyzing ? 'Analyzing...' : 'AI Analyze'}</span>
             </Button>
             
             <Button 
