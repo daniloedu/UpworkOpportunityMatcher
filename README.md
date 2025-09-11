@@ -92,9 +92,9 @@ AWS_SECRET_ACCESS_KEY="YOUR_AWS_SECRET_ACCESS_KEY"
 AWS_REGION="us-west-2" # Or your preferred region
 ```
 
-### `stable-ui` Branch (In-App Settings)
+### `stable-ui` Branch (In-App Settings) - IN PROGRESS
 
-This branch allows for all credentials to be configured directly within the application's UI.
+This branch allows for all credentials to be configured directly within the application's UI. This feature is currently under development and is not yet complete.
 
 1.  Run the application (see below).
 2.  Navigate to the **Settings** page using the gear icon in the header.
