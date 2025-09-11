@@ -102,8 +102,23 @@ This branch allows for all credentials to be configured directly within the appl
 
 ## Running the Application
 
+You can run the backend and frontend servers separately, or use the provided development script.
+
+### Option 1: Using the Development Script (Recommended)
+
+1.  **Activate your Python virtual environment** (if not already active).
+2.  **From the project root directory, run:**
+    ```bash
+    ./run_dev.sh
+    ```
+    This script will start both the backend and frontend servers in the background. It will also provide PIDs to stop them later.
+3.  **Open the Application:**
+    Navigate to `http://localhost:8080` in your web browser.
+
+### Option 2: Running Servers Separately
+
 1.  **Run the Backend Server:**
-    From the project root directory:
+    From the project root directory, with your virtual environment activated:
     ```bash
     uvicorn backend.main:app --reload --port 8000
     ```
