@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ThumbsUp, ThumbsDown, ArrowRight } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, ArrowRight, ExternalLink } from 'lucide-react';
 
 interface AnalyzedJobsProps {
   analyzedJobs: any[];
@@ -77,13 +77,18 @@ export const AnalyzedJobs = ({ analyzedJobs }: AnalyzedJobsProps) => {
                 </ul>
               </div>
             </CardContent>
-            <div className="p-4 border-t mt-auto">
-                <Link to={`/analysis/${result.job_data.id}`} state={{ analysisResult: result }} className="w-full">
+            <div className="p-4 border-t mt-auto flex items-center gap-2">
+                <Link to={`/analysis/${result.job_data.id}`} state={{ analysisResult: result }} className="flex-1">
                     <Button variant="default" className="w-full">
-                        View Full Analysis & Proposal
+                        Analysis
                         <ArrowRight className="h-4 w-4 ml-2" />
                     </Button>
                 </Link>
+                <Button asChild variant="outline" size="icon">
+                  <a href={result.job_data.url} target="_blank" rel="noopener noreferrer">
+                    <ExternalLink className="h-4 w-4" />
+                  </a>
+                </Button>
             </div>
           </Card>
         ))}
