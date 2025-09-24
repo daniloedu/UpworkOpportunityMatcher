@@ -12,7 +12,7 @@ This branch uses a traditional `.env` file for configuration. It is recommended 
 **[View the `stable-env` branch](https://github.com/daniloedu/UpworkOpportunityMatcher/tree/stable-env)**
 
 ### `stable-ui`
-This branch features a user-friendly, in-app settings page for configuration. This is recommended for users who prefer a graphical interface. Please note that this branch is currently a work in progress.
+*** *Still work in progress.* This branch will feature a user-friendly, in-app settings page for configuration. This is recommended for users who prefer a graphical interface. Please note that this branch is currently a work in progress.
 
 **[View the `stable-ui` branch](https://github.com/daniloedu/UpworkOpportunityMatcher/tree/stable-ui)**
 
