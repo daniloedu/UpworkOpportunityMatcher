@@ -45,3 +45,9 @@ docs/github-configuration.txt
 UpworkMDs/
 Tests_Scripts/
 Sessions_notes/
+
+# Gemini specific files
+GEMINI.md
+AGENTS.md
+technical_specifications.md
+.playwright-mcp/
