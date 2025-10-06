@@ -1,25 +1,20 @@
 # Upwork Opportunity Matcher
 
-An AI-powered, full-stack web application designed to help Upwork freelancers find relevant job opportunities. The tool fetches job postings from the Upwork API, allows you to manage your professional profile, and provides a dashboard to view, filter, and analyze job listings using AI.
+This repository contains the source code for the Upwork Opportunity Matcher application.
 
-## Architecture
+## Branches
 
--   **Backend:** A Python server built with the **FastAPI** framework. It serves a REST API to the frontend and is responsible for all communication with the Upwork API, including OAuth2 authentication and GraphQL queries.
--   **Frontend:** A modern Single-Page Application (SPA) built with **React** and **TypeScript**, using **Vite** for the development environment. The UI is built with **shadcn/ui** and styled with **Tailwind CSS**.
+This project is organized into two main branches, each offering a different configuration experience:
 
-## Features
+### `stable-env`
+This branch uses a traditional `.env` file for configuration. It is recommended for developers who are comfortable with command-line environments.
 
--   **Upwork Integration:** Securely authenticates with your Upwork account using OAuth2.
--   **Job Feed:** Fetches and displays relevant job postings from Upwork.
--   **AI-Powered Analysis:** Utilizes Google Gemini or AWS Bedrock to analyze job postings against your profile, providing insights and a suitability score.
--   **Proposal Generation:** Automatically generates a draft cover letter for promising opportunities.
--   **Profile Management:** View your Upwork profile and supplement it with additional local details.
--   **Dual AI Support:** Choose between Google Gemini and AWS Bedrock as your AI provider.
--   **Secure Credential Storage:** All sensitive keys and credentials are encrypted at rest.
+**[View the `stable-env` branch](https://github.com/daniloedu/UpworkOpportunityMatcher/tree/stable-env)**
 
-## Getting Started
+### `stable-ui`
+*** *Still work in progress.* This branch will feature a user-friendly, in-app settings page for configuration. This is recommended for users who prefer a graphical interface. Please note that this branch is currently a work in progress.
 
-### Prerequisites
+**[View the `stable-ui` branch](https://github.com/daniloedu/UpworkOpportunityMatcher/tree/stable-ui)**
 
 -   [Git](https://git-scm.com/)
 -   [Python](https://www.python.org/downloads/) 3.8+
