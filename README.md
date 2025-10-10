@@ -2,6 +2,8 @@
 
 This repository contains the source code for the Upwork Opportunity Matcher application.
 
+You can watch how to install and use it at this video:  **[YouTube Video]((https://www.youtube.com/watch?v=iKoPWrwMPuI))**
+
 ## Branches
 
 This project is organized into two main branches, each offering a different configuration experience:
